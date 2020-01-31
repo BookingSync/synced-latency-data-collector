@@ -132,6 +132,15 @@ RSpec.describe SyncedLatencyDataCollector::DatadogCollector, :freeze_time do
       end
     end
     CreateSyncedTimestamps.new.up if !ActiveRecord::Base.connection.table_exists?("synced_timestamps")
+
+    Rental.delete_all
+    Booking.delete_all
+    Bathroom.delete_all
+    Bedroom.delete_all
+    Photo.delete_all
+    Amenity.delete_all
+    Account.delete_all
+    Synced::Timestamp.delete_all
   end
 
   describe "#collect" do
