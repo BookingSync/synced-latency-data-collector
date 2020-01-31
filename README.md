@@ -1,15 +1,13 @@
 # Synced::Latency::Data::Collector
 
-Welcome to your new gem! In this directory, you'll find the files you need to be able to package up your Ruby library into a gem. Put your Ruby code in the file `lib/synced/latency/data/collector`. To experiment with that code, run `bin/console` for an interactive prompt.
-
-TODO: Delete this and the text above, and describe your gem
+A gem for 
 
 ## Installation
 
 Add this line to your application's Gemfile:
 
 ```ruby
-gem 'synced-latency-data-collector'
+gem "synced-latency-data-collector"
 ```
 
 And then execute:
@@ -22,7 +20,59 @@ Or install it yourself as:
 
 ## Usage
 
-TODO: Write usage instructions here
+Add this into an initializer in the Rails app:
+
+``` rb
+Rails.application.config.to_prepare do
+  SyncedLatencyDataCollector.configure do |config|
+    config.datadog_host = ENV.fetch("SYNCED_DATADOG_HOST")
+    config.datadog_port = ENV.fetch("SYNCED_DATADOG_PORT")
+    config.datadog_namespace = ENV.fetch("SYNCED_DATADOG_NAMESPACE")
+    config.active_accounts_scope_proc = -> { Account.active }
+    config.synced_timestamp_model = Synced::Timestamp
+    config.global_models_proc = -> { [Amenity] }
+    config.account_scoped_models_proc =  -> { [Booking, BookingComment, BookingsFee, BookingsTag, Client, Payment, Photo,
+      PreferencesGeneralSetting, Rental, RentalsAmenity, RentalsTag, Review, Source]
+    }
+    config.non_account_scoped_models_proc = -> { [[Rental, Bedroom], [Rental, Bathroom]] }
+    config.active_scope_for_different_parent = :visible
+    config.sidekiq_job_queue = :critical
+  end
+end
+```
+
+An explanation of the attributes:
+
+* datadog_host - most likely "chef-prod.bookingsync.it"
+
+* datadog_port - most likely 8125
+
+* datadog_namespace - the name of the application and the environment, e.g. "bsa_notifications.production"
+
+* active_accounts_scope_proc - since we want to reject synced timestamps that are created for suspended/canceled accounts and models belonging to these accounts, we need to specify the scope of the applicable accounts for which we want to collect data
+
+* synced_timestamp_model - the name of the synced timestamp model, most likely Synced::Timestamp
+
+* global_models_proc - the proc returning an array of models that are not scoped by any model
+
+* account_scoped_models_proc - the proc returning an array of models that are scoped by Account
+
+* non_account_scoped_models_proc - the proc returning an array of models that are not scoped by Account, e.g. by a Rental. Notice that the elements of this array are arrays of two models - a parent and the model for which we are tracking the latency.
+
+* active_scope_for_different_parent - the name of the scope that will be applied when searching for valid synced timestamps related to the models specified in `non_account_scoped_models_proc`. A specific example would be tracking latency for bedrooms' sync belonging only to visible rentals.
+
+* sidekiq_job_queue - the name of the queue for the Sidekiq job
+
+
+Also, add the job to the schedule that will be run every minute, e.g. in the initializer file for sidekiq-cron:
+
+``` rb
+SyncedLatencyDataCollector::Scheduler.schedule!
+```
+
+That method will add the job to the schedule only if it's not already there yet.
+
+The metrics will be available when creating a new notebook on Datadog. 
 
 ## Development
 
