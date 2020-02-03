@@ -72,7 +72,22 @@ SyncedLatencyDataCollector::Scheduler.schedule!
 
 That method will add the job to the schedule only if it's not already there yet.
 
-The metrics will be available when creating a new notebook on Datadog. 
+The metrics will be available when creating a new notebook on Datadog.
+
+Also, make sure that you have the following index for synced timestamps:
+
+``` rb
+class AddIndexOnModelClassAndSyncedAtForSyncedTimestamps < ActiveRecord::Migration[5.1]
+  disable_ddl_transaction!
+
+  def change
+    add_index :synced_timestamps, [:parent_scope_id, :parent_scope_type, :model_class, :synced_at],
+              name: "synced_timestamps_full_index",
+              algorithm: :concurrently
+  end
+end
+
+```
 
 ## Development
 
