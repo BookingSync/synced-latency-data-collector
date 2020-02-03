@@ -64,7 +64,7 @@ An explanation of the attributes:
 * sidekiq_job_queue - the name of the queue for the Sidekiq job
 
 
-Also, add the job to the schedule that will be run every minute, e.g. in the initializer file for sidekiq-cron:
+Also, add the job to the schedule that will be run every minute. It's recommended to run this from console rather than using an initializer:
 
 ``` rb
 SyncedLatencyDataCollector.schedule!
