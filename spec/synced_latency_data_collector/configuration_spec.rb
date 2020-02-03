@@ -39,6 +39,16 @@ RSpec.describe SyncedLatencyDataCollector::Configuration do
     end
   end
 
+  describe "account_model_proc" do
+    subject(:config) { described_class.new }
+
+    it "is an attr accessor" do
+      expect {
+        config.account_model_proc = :account_model_proc
+      }.to change { config.account_model_proc }.from(nil).to(:account_model_proc)
+    end
+  end
+
   describe "synced_timestamp_model" do
     subject(:config) { described_class.new }
 

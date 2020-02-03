@@ -13,7 +13,7 @@ class SyncedLatencyDataCollector
     private_constant :METRIC_NAME_PREFIX, :METRIC_NAME_SUFFIX, :METRIC_NAME_SEPARATOR
 
     def_delegators :configuration, :active_accounts_scope_proc, :datadog_namespace,
-      :synced_timestamp_model, :global_models_proc, :account_scoped_models_proc,
+      :synced_timestamp_model, :global_models_proc, :account_scoped_models_proc, :account_model_proc,
       :non_account_scoped_models_proc, :active_scope_for_different_parent
 
     def initialize(datadog_statsd_client, configuration)
@@ -54,9 +54,10 @@ class SyncedLatencyDataCollector
 
     def collect_for_differently_scoped_models
       non_account_scoped_models_proc.call.each do |parent_model, model|
+        account_model_name = account_model_proc.call.model_name.singular
         timestamp = synced_timestamp_model
           .select("DISTINCT ON (parent_scope_id) synced_timestamps.synced_at")
-          .where(parent_scope: parent_model.where(account: active_accounts).public_send(active_scope_for_different_parent),
+          .where(parent_scope: parent_model.where(account_model_name => active_accounts).public_send(active_scope_for_different_parent),
             model_class: model.to_s)
           .order(:parent_scope_id, synced_at: :desc)
           .min_by(&:synced_at)

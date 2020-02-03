@@ -29,6 +29,7 @@ Rails.application.config.to_prepare do
     config.datadog_port = ENV.fetch("SYNCED_DATADOG_PORT")
     config.datadog_namespace = ENV.fetch("SYNCED_DATADOG_NAMESPACE")
     config.active_accounts_scope_proc = -> { Account.active }
+    config.account_model_proc = -> { Account } 
     config.synced_timestamp_model = Synced::Timestamp
     config.global_models_proc = -> { [Amenity] }
     config.account_scoped_models_proc =  -> { [Booking, BookingComment, BookingsFee, BookingsTag, Client, Payment, Photo,
@@ -50,6 +51,8 @@ An explanation of the attributes:
 * datadog_namespace - the name of the application and the environment, e.g. "bsa_notifications.production"
 
 * active_accounts_scope_proc - since we want to reject synced timestamps that are created for suspended/canceled accounts and models belonging to these accounts, we need to specify the scope of the applicable accounts for which we want to collect data
+
+* account_model_proc - in some cases, the account model might not be literally the Account one. In majority of the cases, this is going to be `-> { Account }`, however, in some cases it will be something different, e.g. `-> { Website }`.
 
 * synced_timestamp_model - the name of the synced timestamp model, most likely Synced::Timestamp
 
