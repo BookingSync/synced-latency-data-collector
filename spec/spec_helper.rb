@@ -1,5 +1,7 @@
 require "bundler/setup"
 require "synced/latency/data/collector"
+require "active_record"
+require "timecop"
 
 RSpec.configure do |config|
   # Enable flags like --only-failures and --next-failure
@@ -10,5 +12,9 @@ RSpec.configure do |config|
 
   config.expect_with :rspec do |c|
     c.syntax = :expect
+  end
+
+  config.around(:example, :freeze_time) do |example|
+    Timecop.freeze(Time.now.round) { example.run }
   end
 end
