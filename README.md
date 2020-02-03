@@ -1,6 +1,6 @@
 # Synced::Latency::Data::Collector
 
-A gem for 
+A gem for collecting metrics about synchronization latency.
 
 ## Installation
 
