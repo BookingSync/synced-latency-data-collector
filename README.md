@@ -67,7 +67,7 @@ An explanation of the attributes:
 Also, add the job to the schedule that will be run every minute, e.g. in the initializer file for sidekiq-cron:
 
 ``` rb
-SyncedLatencyDataCollector::Scheduler.schedule!
+SyncedLatencyDataCollector.schedule!
 ```
 
 That method will add the job to the schedule only if it's not already there yet.
