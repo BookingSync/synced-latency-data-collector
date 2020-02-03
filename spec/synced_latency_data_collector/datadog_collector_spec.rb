@@ -164,6 +164,7 @@ RSpec.describe SyncedLatencyDataCollector::DatadogCollector, :freeze_time do
     let(:configuration) do
       SyncedLatencyDataCollector::Configuration.new.tap do |config|
         config.active_accounts_scope_proc = active_accounts_scope_proc
+        config.account_model_proc = -> { Account }
         config.datadog_namespace = "example_app.test"
         config.synced_timestamp_model = Synced::Timestamp
         config.global_models_proc = global_models_proc
