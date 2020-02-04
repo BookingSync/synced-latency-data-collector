@@ -43,7 +43,7 @@ class SyncedLatencyDataCollector
     def collect_for_account_scoped_models
       account_scoped_models_proc.call.each do |model|
         timestamp = synced_timestamp_model
-          .select("DISTINCT ON (parent_scope_id) synced_timestamps.synced_at")
+          .select("DISTINCT ON (parent_scope_id) #{synced_timestamp_table}.synced_at")
           .where(parent_scope: active_accounts, model_class: model.to_s)
           .order(:parent_scope_id, synced_at: :desc)
           .min_by(&:synced_at)
@@ -56,7 +56,7 @@ class SyncedLatencyDataCollector
       non_account_scoped_models_proc.call.each do |parent_model, model|
         account_model_name = account_model_proc.call.model_name.singular
         timestamp = synced_timestamp_model
-          .select("DISTINCT ON (parent_scope_id) synced_timestamps.synced_at")
+          .select("DISTINCT ON (parent_scope_id) #{synced_timestamp_table}.synced_at")
           .where(parent_scope: parent_model.where(account_model_name => active_accounts).public_send(active_scope_for_different_parent),
             model_class: model.to_s)
           .order(:parent_scope_id, synced_at: :desc)
@@ -90,6 +90,10 @@ class SyncedLatencyDataCollector
         model_klass.model_name.param_key,
         METRIC_NAME_SUFFIX
       ].join(METRIC_NAME_SEPARATOR)
+    end
+
+    def synced_timestamp_table
+      @synced_timestamp_table ||= synced_timestamp_model.table_name
     end
   end
 end
