@@ -195,11 +195,9 @@ RSpec.describe SyncedLatencyDataCollector::DatadogCollector, :freeze_time do
         it "collects data for global models based on the maximum applicable latency" do
           expect {
             collect
-          }.to change { datadog_statsd_client.registry }
-
-          expect(datadog_statsd_client.registry).to match_array [
+          }.to change { datadog_statsd_client.registry }.from([]).to([
             { "synced.example_app.test.amenity.maximum_sync_latency_in_minutes" => 5 }
-          ]
+          ])
         end
       end
 
@@ -236,12 +234,10 @@ RSpec.describe SyncedLatencyDataCollector::DatadogCollector, :freeze_time do
         it "collects data for these models based on the maximum applicable latency" do
           expect {
             collect
-          }.to change { datadog_statsd_client.registry }
-
-          expect(datadog_statsd_client.registry).to match_array [
-            { "synced.example_app.test.booking.maximum_sync_latency_in_minutes" => 5 },
-            { "synced.example_app.test.rental.maximum_sync_latency_in_minutes" => 8 }
-          ]
+          }.to change { datadog_statsd_client.registry }.from([]).to([
+            { "synced.example_app.test.rental.maximum_sync_latency_in_minutes" => 8 },
+            { "synced.example_app.test.booking.maximum_sync_latency_in_minutes" => 5 }
+          ])
         end
       end
 
@@ -286,12 +282,10 @@ RSpec.describe SyncedLatencyDataCollector::DatadogCollector, :freeze_time do
         it "collects data for these models based on the maximum applicable latency" do
           expect {
             collect
-          }.to change { datadog_statsd_client.registry }
-
-          expect(datadog_statsd_client.registry).to match_array [
-            { "synced.example_app.test.bathroom.maximum_sync_latency_in_minutes" => 5 },
-            { "synced.example_app.test.bedroom.maximum_sync_latency_in_minutes" => 11 }
-          ]
+          }.to change { datadog_statsd_client.registry }.from([]).to([
+            { "synced.example_app.test.bedroom.maximum_sync_latency_in_minutes" => 11 },
+            { "synced.example_app.test.bathroom.maximum_sync_latency_in_minutes" => 5 }
+          ])
         end
       end
 
@@ -322,13 +316,11 @@ RSpec.describe SyncedLatencyDataCollector::DatadogCollector, :freeze_time do
       it "collects all the stats" do
         expect {
           collect
-        }.to change { datadog_statsd_client.registry }
-
-        expect(datadog_statsd_client.registry).to match_array [
-          { "synced.example_app.test.bedroom.maximum_sync_latency_in_minutes" => 1 },
+        }.to change { datadog_statsd_client.registry }.from([]).to([
+          { "synced.example_app.test.amenity.maximum_sync_latency_in_minutes" => 5 },
           { "synced.example_app.test.rental.maximum_sync_latency_in_minutes" => 3 },
-          { "synced.example_app.test.amenity.maximum_sync_latency_in_minutes" => 5 }
-        ]
+          { "synced.example_app.test.bedroom.maximum_sync_latency_in_minutes" => 1 }
+        ])
       end
     end
   end
