@@ -30,55 +30,40 @@ class SyncedLatencyDataCollector
     private
 
     def collect_for_global_models
-      global_models_proc.call.map do |model|
-        Thread.new do
-          timestamp = nil
-          with_connection_pool do
-            timestamp = synced_timestamp_model
-              .where(parent_scope: nil, model_class: model.to_s)
-              .order(:synced_at)
-              .last
-          end
+      global_models_proc.call.each do |model|
+        timestamp = synced_timestamp_model
+          .where(parent_scope: nil, model_class: model.to_s)
+          .order(:synced_at)
+          .last
 
-          register_latency_if_timestamp_exists(model, timestamp)
-        end
-      end.map(&:join)
+        register_latency_if_timestamp_exists(model, timestamp)
+      end
     end
 
     def collect_for_account_scoped_models
-      account_scoped_models_proc.call.map do |model|
-        Thread.new do
-          timestamp = nil
-          with_connection_pool do
-            timestamp = synced_timestamp_model
-              .select("DISTINCT ON (parent_scope_id) #{synced_timestamp_table}.synced_at")
-              .where(parent_scope: active_accounts, model_class: model.to_s)
-              .order(:parent_scope_id, synced_at: :desc)
-              .min_by(&:synced_at)
-          end
+      account_scoped_models_proc.call.each do |model|
+        timestamp = synced_timestamp_model
+          .select("DISTINCT ON (parent_scope_id) #{synced_timestamp_table}.synced_at")
+          .where(parent_scope: active_accounts, model_class: model.to_s)
+          .order(:parent_scope_id, synced_at: :desc)
+          .min_by(&:synced_at)
 
-          register_latency_if_timestamp_exists(model, timestamp)
-        end
-      end.map(&:join)
+        register_latency_if_timestamp_exists(model, timestamp)
+      end
     end
 
     def collect_for_differently_scoped_models
-      non_account_scoped_models_proc.call.map do |parent_model, model|
+      non_account_scoped_models_proc.call.each do |parent_model, model|
         account_model_name = account_model_proc.call.model_name.singular
-        Thread.new do
-          timestamp = nil
-          with_connection_pool do
-            timestamp = synced_timestamp_model
-              .select("DISTINCT ON (parent_scope_id) #{synced_timestamp_table}.synced_at")
-              .where(parent_scope: parent_model.where(account_model_name => active_accounts).public_send(active_scope_for_different_parent),
-                model_class: model.to_s)
-              .order(:parent_scope_id, synced_at: :desc)
-              .min_by(&:synced_at)
-          end
+        timestamp = synced_timestamp_model
+          .select("DISTINCT ON (parent_scope_id) #{synced_timestamp_table}.synced_at")
+          .where(parent_scope: parent_model.where(account_model_name => active_accounts).public_send(active_scope_for_different_parent),
+            model_class: model.to_s)
+          .order(:parent_scope_id, synced_at: :desc)
+          .min_by(&:synced_at)
 
-          register_latency_if_timestamp_exists(model, timestamp)
-        end
-      end.map(&:join)
+        register_latency_if_timestamp_exists(model, timestamp)
+      end
     end
 
     def register_latency_if_timestamp_exists(model, timestamp)
@@ -109,12 +94,6 @@ class SyncedLatencyDataCollector
 
     def synced_timestamp_table
       @synced_timestamp_table ||= synced_timestamp_model.table_name
-    end
-
-    def with_connection_pool
-      ActiveRecord::Base.connection_pool.with_connection do
-        yield
-      end
     end
   end
 end
