@@ -29,7 +29,7 @@ Rails.application.config.to_prepare do
     config.datadog_port = ENV.fetch("SYNCED_DATADOG_PORT")
     config.datadog_namespace = ENV.fetch("SYNCED_DATADOG_NAMESPACE")
     config.active_accounts_scope_proc = -> { Account.active }
-    config.account_model_proc = -> { Account } 
+    config.account_model_proc = -> { Account }
     config.synced_timestamp_model = Synced::Timestamp
     config.global_models_proc = -> { [Amenity] }
     config.account_scoped_models_proc =  -> { [Booking, BookingComment, BookingsFee, BookingsTag, Client, Payment, Photo,
@@ -37,6 +37,7 @@ Rails.application.config.to_prepare do
     }
     config.non_account_scoped_models_proc = -> { [[Rental, Bedroom], [Rental, Bathroom]] }
     config.active_scope_for_different_parent = :visible
+    config.check_timestamps_since_proc = -> { Time.now.utc - (3 * 86_400) }
     config.sidekiq_job_queue = :critical
   end
 end
@@ -63,6 +64,8 @@ An explanation of the attributes:
 * non_account_scoped_models_proc - the proc returning an array of models that are not scoped by Account, e.g. by a Rental. Notice that the elements of this array are arrays of two models - a parent and the model for which we are tracking the latency.
 
 * active_scope_for_different_parent - the name of the scope that will be applied when searching for valid synced timestamps related to the models specified in `non_account_scoped_models_proc`. A specific example would be tracking latency for bedrooms' sync belonging only to visible rentals.
+
+* check_timestamps_since_proc - this proc returns timestamp that will be used to filter out outdated timestamps and hence limit amount of data to be process. Default value is 3 days.
 
 * sidekiq_job_queue - the name of the queue for the Sidekiq job
 
