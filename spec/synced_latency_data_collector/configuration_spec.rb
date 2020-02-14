@@ -111,7 +111,7 @@ RSpec.describe SyncedLatencyDataCollector::Configuration do
     end
 
     it "returns a proc returning timestamp from 3 days ago", :freeze_time do
-      expect(config.check_timestamps_since_proc.call).to eq(Time.now.utc - (3 * 24 * 3600)) # 3 days ago
+      expect(config.check_timestamps_since_proc.call).to eq(Time.now.utc - (3 * 24 * 3600))
     end
   end
 
