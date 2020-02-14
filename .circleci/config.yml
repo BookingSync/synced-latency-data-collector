@@ -2,7 +2,7 @@
 version: 2
 jobs:
   build:
-    working_directory: ~/BookingSync/bookingsync-readonly-db-uri-resolver
+    working_directory: ~/BookingSync/synced-latency-data-collector
     parallelism: 1
     docker:
       - image: circleci/ruby:2.6.5-node
