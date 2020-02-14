@@ -14,7 +14,7 @@ class SyncedLatencyDataCollector
 
     def_delegators :configuration, :active_accounts_scope_proc, :datadog_namespace,
       :synced_timestamp_model, :global_models_proc, :account_scoped_models_proc, :account_model_proc,
-      :non_account_scoped_models_proc, :active_scope_for_different_parent
+      :non_account_scoped_models_proc, :active_scope_for_different_parent, :check_timestamps_since_proc
 
     def initialize(datadog_statsd_client, configuration)
       @datadog_statsd_client = datadog_statsd_client
@@ -41,28 +41,24 @@ class SyncedLatencyDataCollector
     end
 
     def collect_for_account_scoped_models
-      account_scoped_models_proc.call.each do |model|
-        timestamp = synced_timestamp_model
-          .select("DISTINCT ON (parent_scope_id) #{synced_timestamp_table}.synced_at")
-          .where(parent_scope: active_accounts, model_class: model.to_s)
-          .order(:parent_scope_id, synced_at: :desc)
-          .min_by(&:synced_at)
+      model_classes = account_scoped_models_proc.call.map(&:to_s)
+      models_with_timestamps = fetch_models_with_timestamps_for_parent_and_dependent_models(active_accounts, model_classes)
 
-        register_latency_if_timestamp_exists(model, timestamp)
+      models_with_timestamps.each_pair do |model_name, timestamp|
+        register_latency_if_timestamp_exists(infer_model_model_class_from_name(model_name), timestamp)
       end
     end
 
     def collect_for_differently_scoped_models
-      non_account_scoped_models_proc.call.each do |parent_model, model|
-        account_model_name = account_model_proc.call.model_name.singular
-        timestamp = synced_timestamp_model
-          .select("DISTINCT ON (parent_scope_id) #{synced_timestamp_table}.synced_at")
-          .where(parent_scope: parent_model.where(account_model_name => active_accounts).public_send(active_scope_for_different_parent),
-            model_class: model.to_s)
-          .order(:parent_scope_id, synced_at: :desc)
-          .min_by(&:synced_at)
+      account_model_name = account_model_proc.call.model_name.singular
 
-        register_latency_if_timestamp_exists(model, timestamp)
+      non_account_scoped_models_proc.call.each do |parent_model, dependent_model|
+        parent_scope = parent_model.where(account_model_name => active_accounts).public_send(active_scope_for_different_parent)
+        models_with_timestamps = fetch_models_with_timestamps_for_parent_and_dependent_models(parent_scope, dependent_model.to_s)
+
+        models_with_timestamps.each_pair do |model_name, timestamp|
+          register_latency_if_timestamp_exists(infer_model_model_class_from_name(model_name), timestamp)
+        end
       end
     end
 
@@ -94,6 +90,23 @@ class SyncedLatencyDataCollector
 
     def synced_timestamp_table
       @synced_timestamp_table ||= synced_timestamp_model.table_name
+    end
+
+    def infer_model_model_class_from_name(name)
+      Object.const_get(name)
+    end
+
+    def fetch_models_with_timestamps_for_parent_and_dependent_models(parent_scope, model_class)
+      synced_timestamp_model
+        .select("MAX(#{synced_timestamp_table}.synced_at) AS synced_at, #{synced_timestamp_table}.model_class")
+        .where(model_class: model_class, parent_scope: parent_scope)
+        .where("synced_timestamps.synced_at > ?", check_timestamps_since_proc.call)
+        .group(:model_class, :parent_scope_id)
+        .order(:model_class, :parent_scope_id)
+        .group_by(&:model_class)
+        .transform_values do |scoped_timestamps|
+          scoped_timestamps.min_by { |model_max_timestamp| model_max_timestamp.synced_at }
+        end
     end
   end
 end

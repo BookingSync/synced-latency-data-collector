@@ -101,6 +101,20 @@ RSpec.describe SyncedLatencyDataCollector::Configuration do
     end
   end
 
+  describe "check_timestamps_since_proc" do
+    subject(:config) { described_class.new }
+
+    it "is an attr accessor" do
+      expect {
+        config.check_timestamps_since_proc = :check_timestamps_since_proc
+      }.to change { config.check_timestamps_since_proc }.to(:check_timestamps_since_proc)
+    end
+
+    it "returns a proc returning timestamp from 3 days ago", :freeze_time do
+      expect(config.check_timestamps_since_proc.call).to eq(Time.now.utc - (3 * 24 * 3600))
+    end
+  end
+
   describe "active_scope_for_different_parent" do
     subject(:config) { described_class.new }
 
