@@ -67,7 +67,7 @@ class SyncedLatencyDataCollector
     end
 
     def register_latency(model_klass, latency_in_minutes)
-      datadog_statsd_client.count(build_metric_name(model_klass), latency_in_minutes)
+      datadog_statsd_client.gauge(build_metric_name(model_klass), latency_in_minutes)
     end
 
     def calculate_latency(timestamp)
