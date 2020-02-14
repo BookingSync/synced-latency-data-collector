@@ -156,7 +156,7 @@ RSpec.describe SyncedLatencyDataCollector::DatadogCollector, :freeze_time do
           @registry = []
         end
 
-        def count(name, value)
+        def gauge(name, value)
           @registry << { name => value }
         end
       end.new
