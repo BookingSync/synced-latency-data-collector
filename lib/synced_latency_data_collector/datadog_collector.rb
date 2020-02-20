@@ -100,7 +100,7 @@ class SyncedLatencyDataCollector
       synced_timestamp_model
         .select("MAX(#{synced_timestamp_table}.synced_at) AS synced_at, #{synced_timestamp_table}.model_class")
         .where(model_class: model_class, parent_scope: parent_scope)
-        .where("synced_timestamps.synced_at > ?", check_timestamps_since_proc.call)
+        .where("#{synced_timestamp_table}.synced_at > ?", check_timestamps_since_proc.call)
         .group(:model_class, :parent_scope_id)
         .order(:model_class, :parent_scope_id)
         .group_by(&:model_class)
