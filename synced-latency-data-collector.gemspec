@@ -34,6 +34,6 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency "timecop", "~> 0.9"
 
   spec.add_dependency "dogstatsd-ruby", "~> 4"
-  spec.add_dependency "sidekiq", "~> 5"
+  spec.add_dependency "sidekiq", ">= 5", "< 7"
   spec.add_dependency "sidekiq-cron", "~> 1"
 end
