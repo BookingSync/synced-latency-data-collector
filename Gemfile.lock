@@ -34,7 +34,7 @@ GEM
     minitest (5.14.4)
     pg (1.2.2)
     raabro (1.4.0)
-    rack (2.2.3)
+    rack (2.2.6.3)
     rake (13.0.3)
     redis (4.4.0)
     redis-namespace (1.7.0)
