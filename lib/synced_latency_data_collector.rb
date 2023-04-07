@@ -15,7 +15,7 @@ class SyncedLatencyDataCollector
   end
 
   def self.datadog_stats_client
-    Datadog::Statsd.new(configuration.datadog_host, configuration.datadog_port)
+    Datadog::Statsd.new(configuration.datadog_host, configuration.datadog_port, tags: ["host:disabled"])
   end
 
   def self.collect
@@ -26,4 +26,3 @@ class SyncedLatencyDataCollector
     SyncedLatencyDataCollector::Scheduler.new(configuration).schedule!
   end
 end
-
