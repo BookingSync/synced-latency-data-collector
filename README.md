@@ -73,7 +73,11 @@ An explanation of the attributes:
 Also, add the job to the schedule that will be run every minute. It's recommended to add this to the initializer (ideally, after sidekiq-cron is already configured, to avoid unexpected issues):
 
 ``` rb
-SyncedLatencyDataCollector.schedule!
+Sidekiq.configure_server do |config|
+  config.on(:startup) do
+    SyncedLatencyDataCollector.schedule!
+  end
+end
 ```
 
 That method will add the job to the schedule only if it's not already there yet.
