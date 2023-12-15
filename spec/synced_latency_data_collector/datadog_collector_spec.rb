@@ -44,20 +44,30 @@ RSpec.describe SyncedLatencyDataCollector::DatadogCollector, :freeze_time do
       scope :active, -> { where(active: true) }
     end
 
+    database_name = ENV.fetch("DATABASE_NAME", "synced-latency-data-collector-test")
+    if (posgres_user = ENV["POSTGRES_USER"]) && (postgres_password = ENV["POSTGRES_PASSWORD"])
+      database_url = ENV.fetch("DATABASE_URL", "postgres://#{posgres_user}:#{postgres_password}@localhost/#{database_name}")
+      postgres_url = ENV.fetch("POSTGRES_URL", "postgres://#{posgres_user}:#{postgres_password}@localhost")
+    else
+      database_url = ENV.fetch("DATABASE_URL", "postgres://localhost/#{database_name}")
+      postgres_url = ENV.fetch("POSTGRES_URL", "postgres://localhost")
+    end
+
+
     begin
-      ActiveRecord::Base.establish_connection(ENV.fetch("DATABASE_URI", "postgresql://localhost"))
+      ActiveRecord::Base.establish_connection(postgres_url)
         .connection
         .drop_database(database_name)
     rescue ActiveRecord::StatementInvalid
     end
 
     begin
-      ActiveRecord::Base.establish_connection(ENV.fetch("DATABASE_URI", "postgresql://localhost"))
+      ActiveRecord::Base.establish_connection(postgres_url)
         .connection
         .create_database(database_name)
     rescue ActiveRecord::StatementInvalid
     end
-    ActiveRecord::Base.establish_connection(ENV.fetch("DATABASE_URI", "postgresql://localhost/#{database_name}"))
+    ActiveRecord::Base.establish_connection(database_url)
 
     class CreateAccounts < ActiveRecord::Migration[4.2]
       def up
