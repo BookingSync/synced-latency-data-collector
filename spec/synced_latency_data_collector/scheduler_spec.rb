@@ -10,14 +10,13 @@ RSpec.describe SyncedLatencyDataCollector::Scheduler do
     end
 
     let(:redis_url) { ENV.fetch("REDIS_URL", "redis://localhost:6379") }
-    let(:redis_namespace) { "SyncedLatencyDataCollector_Scheduler_test" }
 
     before do
       Sidekiq.configure_client do |config|
-        config.redis = { url:  redis_url, namespace: redis_namespace }
+        config.redis = { url: redis_url }
       end
       Sidekiq.redis do |sidekiq_connection|
-        sidekiq_connection.redis.flushdb
+        sidekiq_connection.flushdb
         sidekiq_connection.keys("cron_job*").each do |key|
           sidekiq_connection.del(key)
         end

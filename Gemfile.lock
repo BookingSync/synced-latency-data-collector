@@ -3,8 +3,8 @@ PATH
   specs:
     synced-latency-data-collector (0.1.0)
       dogstatsd-ruby (~> 4)
-      sidekiq (>= 5, < 7)
-      sidekiq-cron (~> 1)
+      sidekiq (>= 5)
+      sidekiq-cron (>= 1)
 
 GEM
   remote: https://rubygems.org/
